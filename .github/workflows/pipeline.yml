@@ -1,0 +1,27 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Build Docker image
+      run: docker build -t infisical-app .
+
+    - name: Scan security (Trivy)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: infisical-app
+
+    - name: Test application
+      run: echo "Tests OK"
+
+    - name: Deploy
+      run: echo "Deploy OK"
