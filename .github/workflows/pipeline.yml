@@ -10,18 +10,26 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    - name: Deploy
-      run: docker compose up -d
+    # 1. On construit l'image Docker pour que Trivy puisse la scanner localement
+    - name: Build Docker Image
+      run: |
+        docker build -t infisical-app:latest .
 
+    # 2. On scanne l'image que l'on vient de construire
     - name: Scan security (Trivy)
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: infisical-app
+        image-ref: 'infisical-app:latest'
+        format: 'table'
+        exit-code: '1' # Bloque le pipeline si des failles critiques sont trouvées
+        severity: 'CRITICAL,HIGH'
 
+    # 3. On lance les tests
     - name: Test application
       run: echo "Tests OK"
 
-    - name: Deploy
-      run: echo "Deploy OK"
+    # 4. On déploie uniquement si les étapes précédentes ont réussi
+    - name: Deploy with Docker Compose
+      run: docker compose up -d
